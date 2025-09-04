@@ -1,4 +1,4 @@
-##Установка моделей Ollama
+## Установка моделей Ollama
 # Установка моделей
 ollama pull qwen3-32b
 ollama pull gpt-oss-120b  
@@ -10,7 +10,7 @@ ollama list
 # Тестирование модели
 ollama run qwen3-32b
 
-##Запуск POC
+## Запуск POC
 # 1. Установка зависимостей
 pip install -r requirements.txt
 
@@ -24,7 +24,7 @@ python main.py
 # Или через uvicorn
 uvicorn main:app --host 0.0.0.0 --port 8000 --reload
 
-##Особенности реализации
+## Особенности реализации
 SGR Pipeline:
 Analysis - анализ намерений и сущностей
 Strategy - выбор подхода к построению SQL
