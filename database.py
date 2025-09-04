@@ -1,5 +1,6 @@
 import asyncpg
 import os
+import time
 from typing import List, Dict, Any
 import logging
 
@@ -52,10 +53,15 @@ class DatabaseManager:
         # Добавление LIMIT если отсутствует
         if 'limit' not in sql_lower:
             sql += f" LIMIT {limit}"
-        
+
+        logger.info("Executing SQL: %s", sql)
+
         try:
             async with self.pool.acquire() as connection:
+                start_time = time.perf_counter()
                 result = await connection.fetch(sql)
+                duration = time.perf_counter() - start_time
+                logger.info("SQL execution took %.3f seconds", duration)
                 return [dict(row) for row in result]
                 
         except Exception as e:
