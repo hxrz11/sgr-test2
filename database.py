@@ -1,7 +1,11 @@
 import asyncpg
 import os
-from typing import List, Dict, Any
 import logging
+from typing import List, Dict, Any
+
+import dotenv
+
+dotenv.load_dotenv()
 
 logger = logging.getLogger(__name__)
 
@@ -9,8 +13,15 @@ class DatabaseManager:
     def __init__(self):
         self.connection_string = self._build_connection_string()
         self.pool = None
-    
+
     def _build_connection_string(self) -> str:
+        required = ['DATABASE_USER', 'DATABASE_PASSWORD', 'DATABASE_NAME']
+        missing = [var for var in required if not os.getenv(var)]
+        if missing:
+            raise EnvironmentError(
+                "Отсутствуют обязательные переменные окружения: " + ", ".join(missing)
+            )
+
         return (
             f"postgresql://"
             f"{os.getenv('DATABASE_USER')}:"
