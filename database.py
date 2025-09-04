@@ -1,8 +1,12 @@
-import asyncpg
 import os
 import time
-from typing import List, Dict, Any
 import logging
+from typing import List, Dict, Any
+
+import asyncpg
+import dotenv
+
+dotenv.load_dotenv()
 
 logger = logging.getLogger(__name__)
 
