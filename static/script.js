@@ -117,7 +117,7 @@ function displayResults(result) {
     
     // Показываем результаты
     document.getElementById('results').style.display = 'block';
-    showTab('explanation');
+    showTab('explanation', null);
 }
 
 // Создание таблицы данных
@@ -158,18 +158,26 @@ function createDataTable(data) {
 }
 
 // Переключение табов
-function showTab(tabName) {
+function showTab(tabName, e) {
     // Скрываем все табы
     const tabs = document.querySelectorAll('.tab-content');
     tabs.forEach(tab => tab.style.display = 'none');
-    
+
     // Убираем активность с кнопок
     const buttons = document.querySelectorAll('.tab-btn');
     buttons.forEach(btn => btn.classList.remove('active'));
-    
+
     // Показываем нужный таб
     document.getElementById(`${tabName}-tab`).style.display = 'block';
-    event.target.classList.add('active');
+
+    if (e) {
+        e.target.classList.add('active');
+    } else {
+        const btn = document.querySelector(`.tab-btn[data-tab="${tabName}"]`);
+        if (btn) {
+            btn.classList.add('active');
+        }
+    }
 }
 
 // Копирование SQL
