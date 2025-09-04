@@ -1,5 +1,13 @@
 let currentResults = null;
 
+function escape(str) {
+    return String(str)
+        .replace(/&/g, '&amp;')
+        .replace(/</g, '&lt;')
+        .replace(/>/g, '&gt;')
+        .replace(/"/g, '&quot;');
+}
+
 // Инициализация при загрузке страницы
 document.addEventListener('DOMContentLoaded', async function() {
     await checkModelsAvailability();
@@ -135,7 +143,7 @@ function createDataTable(data) {
             } else if (typeof value === 'string' && value.length > 50) {
                 value = value.substring(0, 47) + '...';
             }
-            html += `<td>${value}</td>`;
+            html += `<td>${escape(value)}</td>`;
         });
         html += '</tr>';
     }
