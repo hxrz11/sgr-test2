@@ -1,11 +1,12 @@
 from fastapi import FastAPI, HTTPException
 from fastapi.staticfiles import StaticFiles
 from fastapi.responses import HTMLResponse
-from pydantic import BaseModel
+from pydantic import BaseModel, Field
 from contextlib import asynccontextmanager
 import os
 import logging
 from typing import List, Dict, Any
+from pathlib import Path
 
 from sgr_schema import SQLGeneration, DATABASE_SCHEMA, EXAMPLE_QUERIES
 from database import DatabaseManager  
@@ -18,6 +19,7 @@ logger = logging.getLogger(__name__)
 # Глобальные объекты
 db_manager = DatabaseManager()
 ollama_client = OllamaClient(os.getenv("OLLAMA_BASE_URL", "http://localhost:11434"))
+BASE_DIR = Path(__file__).resolve().parent
 
 
 @asynccontextmanager
@@ -34,7 +36,7 @@ async def lifespan(app: FastAPI):
 app = FastAPI(title="Text2SQL POC с SGR", version="1.0.0", lifespan=lifespan)
 
 # Подключение статических файлов
-app.mount("/static", StaticFiles(directory="static"), name="static")
+app.mount("/static", StaticFiles(directory=BASE_DIR / "static"), name="static")
 
 class QueryRequest(BaseModel):
     question: str
@@ -44,7 +46,7 @@ class QueryResponse(BaseModel):
     sql_query: str
     explanation: str
     confidence: float
-    results: List[Dict[str, Any]] = []
+    results: List[Dict[str, Any]] = Field(default_factory=list)
     execution_time_ms: int
     model_used: str
 
@@ -53,7 +55,8 @@ class QueryResponse(BaseModel):
 @app.get("/", response_class=HTMLResponse)
 async def root():
     """Главная страница"""
-    with open("static/index.html", "r", encoding="utf-8") as f:
+    index_path = BASE_DIR / "static" / "index.html"
+    with open(index_path, "r", encoding="utf-8") as f:
         return HTMLResponse(f.read())
 
 @app.get("/api/models")
