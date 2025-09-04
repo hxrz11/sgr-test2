@@ -1,7 +1,7 @@
 from fastapi import FastAPI, HTTPException
 from fastapi.staticfiles import StaticFiles
 from fastapi.responses import HTMLResponse
-from pydantic import BaseModel, Field
+from pydantic import BaseModel, Field, ValidationError
 from contextlib import asynccontextmanager
 import os
 import logging
@@ -39,7 +39,7 @@ app = FastAPI(title="Text2SQL POC с SGR", version="1.0.0", lifespan=lifespan)
 app.mount("/static", StaticFiles(directory=BASE_DIR / "static"), name="static")
 
 class QueryRequest(BaseModel):
-    question: str
+    question: str = Field(..., min_length=1, max_length=500)
     model: str = "qwen3-32b"
 
 class QueryResponse(BaseModel):
@@ -137,7 +137,11 @@ async def process_query(request: QueryRequest):
             execution_time_ms=execution_time,
             model_used=request.model
         )
-        
+
+    except ValidationError as e:
+        logger.error(f"Ошибка валидации: {e}")
+        raise HTTPException(status_code=422, detail=e.errors())
+
     except Exception as e:
         logger.error(f"Ошибка обработки запроса: {e}", exc_info=True)
         raise HTTPException(status_code=500, detail=str(e))
