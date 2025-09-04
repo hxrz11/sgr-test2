@@ -103,7 +103,11 @@ async def process_query(request: QueryRequest):
 
         # Получение схемы для структурированного вывода
         schema = SQLGeneration.model_json_schema()
-        
+
+        # Логирование промпта и выбранной модели
+        logger.info("Model selected: %s", request.model)
+        logger.info("Prompt: %s", prompt)
+
         # Генерация ответа
         result = await ollama_client.generate_structured(
             model=request.model,
@@ -117,9 +121,14 @@ async def process_query(request: QueryRequest):
         
         # Выполнение SQL запроса
         query_results = await db_manager.execute_query(sgr_result.sql_query)
-        
+
         execution_time = int((time.time() - start_time) * 1000)
-        
+        logger.info(
+            "Generated SQL: %s | Execution time: %d ms",
+            sgr_result.sql_query,
+            execution_time,
+        )
+
         return QueryResponse(
             sql_query=sgr_result.sql_query,
             explanation=sgr_result.explanation,
@@ -130,7 +139,7 @@ async def process_query(request: QueryRequest):
         )
         
     except Exception as e:
-        logger.error(f"Ошибка обработки запроса: {e}")
+        logger.error(f"Ошибка обработки запроса: {e}", exc_info=True)
         raise HTTPException(status_code=500, detail=str(e))
 
 if __name__ == "__main__":
