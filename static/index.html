@@ -1,0 +1,91 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Text2SQL POC с SGR</title>
+    <link rel="stylesheet" href="/static/style.css">
+</head>
+<body>
+    <div class="container">
+        <header>
+            <h1>🤖 Text2SQL с Schema-Guided Reasoning</h1>
+            <p>Преобразование естественного языка в SQL для системы закупок</p>
+        </header>
+
+        <div class="query-section">
+            <div class="input-group">
+                <label for="question">Ваш вопрос на русском языке:</label>
+                <textarea id="question" placeholder="Например: Найди все закупки по заявке ЛГ000000524"></textarea>
+            </div>
+
+            <div class="model-selection">
+                <label for="model-select">Выбор модели:</label>
+                <select id="model-select">
+                    <option value="qwen3-32b">Qwen3-32B (по умолчанию)</option>
+                    <option value="gpt-oss-120b">GPT-OSS-120B</option>
+                    <option value="deepseek-r1-0528">DeepSeek-R1</option>
+                </select>
+                <span id="model-status"></span>
+            </div>
+
+            <button id="submit-btn" onclick="submitQuery()">🔍 Найти</button>
+        </div>
+
+        <div id="loading" class="loading" style="display: none;">
+            <div class="spinner"></div>
+            <p>Генерирую SQL запрос...</p>
+        </div>
+
+        <div id="results" class="results" style="display: none;">
+            <div class="tabs">
+                <button class="tab-btn active" onclick="showTab('explanation')">📝 Объяснение</button>
+                <button class="tab-btn" onclick="showTab('sql')">💾 SQL</button>
+                <button class="tab-btn" onclick="showTab('data')">📊 Данные</button>
+            </div>
+
+            <div id="explanation-tab" class="tab-content">
+                <div class="explanation-card">
+                    <h3>Объяснение логики запроса</h3>
+                    <p id="explanation-text"></p>
+                    <div class="confidence">
+                        <span>Уверенность модели: </span>
+                        <div class="confidence-bar">
+                            <div id="confidence-fill"></div>
+                        </div>
+                        <span id="confidence-text"></span>
+                    </div>
+                </div>
+            </div>
+
+            <div id="sql-tab" class="tab-content" style="display: none;">
+                <div class="sql-card">
+                    <h3>Сгенерированный SQL запрос</h3>
+                    <pre id="sql-query"></pre>
+                    <button onclick="copySql()">📋 Копировать</button>
+                </div>
+            </div>
+
+            <div id="data-tab" class="tab-content" style="display: none;">
+                <div class="data-card">
+                    <h3>Результаты выполнения</h3>
+                    <div id="data-stats"></div>
+                    <div id="data-table"></div>
+                </div>
+            </div>
+        </div>
+
+        <div class="examples">
+            <h3>💡 Примеры запросов</h3>
+            <div class="example-buttons">
+                <button onclick="setExample('Найди закупки по заявке ЛГ000000524')">Поиск по заявке</button>
+                <button onclick="setExample('Покажи все позиции с лампами количеством больше 5')">Номенклатура с лампами</button>
+                <button onclick="setExample('Сколько позиций у Петрова в работе')">Работа пользователя</button>
+                <button onclick="setExample('Найди заказы по объекту Газопровод за сентябрь')">По объекту и дате</button>
+            </div>
+        </div>
+    </div>
+
+    <script src="/static/script.js"></script>
+</body>
+</html>
