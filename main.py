@@ -1,7 +1,8 @@
-from fastapi import FastAPI, HTTPException, Request
+from fastapi import FastAPI, HTTPException
 from fastapi.staticfiles import StaticFiles
 from fastapi.responses import HTMLResponse
 from pydantic import BaseModel
+from contextlib import asynccontextmanager
 import os
 import logging
 from typing import List, Dict, Any
@@ -14,14 +15,26 @@ from ollama_client import OllamaClient
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
 
-app = FastAPI(title="Text2SQL POC с SGR", version="1.0.0")
-
-# Подключение статических файлов
-app.mount("/static", StaticFiles(directory="static"), name="static")
-
 # Глобальные объекты
 db_manager = DatabaseManager()
 ollama_client = OllamaClient(os.getenv("OLLAMA_BASE_URL", "http://localhost:11434"))
+
+
+@asynccontextmanager
+async def lifespan(app: FastAPI):
+    """Lifecycle events for startup and shutdown"""
+    await db_manager.initialize()
+    logger.info("Приложение запущено")
+    try:
+        yield
+    finally:
+        await db_manager.close()
+
+
+app = FastAPI(title="Text2SQL POC с SGR", version="1.0.0", lifespan=lifespan)
+
+# Подключение статических файлов
+app.mount("/static", StaticFiles(directory="static"), name="static")
 
 class QueryRequest(BaseModel):
     question: str
@@ -35,16 +48,7 @@ class QueryResponse(BaseModel):
     execution_time_ms: int
     model_used: str
 
-@app.on_event("startup")
-async def startup_event():
-    """Инициализация при запуске"""
-    await db_manager.initialize()
-    logger.info("Приложение запущено")
-
-@app.on_event("shutdown")
-async def shutdown_event():
-    """Очистка при остановке"""
-    await db_manager.close()
+    model_config = {"protected_namespaces": ()}
 
 @app.get("/", response_class=HTMLResponse)
 async def root():
