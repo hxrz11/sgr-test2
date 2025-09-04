@@ -39,9 +39,9 @@
 
         <div id="results" class="results" style="display: none;">
             <div class="tabs">
-                <button class="tab-btn active" onclick="showTab('explanation')">📝 Объяснение</button>
-                <button class="tab-btn" onclick="showTab('sql')">💾 SQL</button>
-                <button class="tab-btn" onclick="showTab('data')">📊 Данные</button>
+                <button class="tab-btn active" data-tab="explanation" onclick="showTab('explanation', event)">📝 Объяснение</button>
+                <button class="tab-btn" data-tab="sql" onclick="showTab('sql', event)">💾 SQL</button>
+                <button class="tab-btn" data-tab="data" onclick="showTab('data', event)">📊 Данные</button>
             </div>
 
             <div id="explanation-tab" class="tab-content">
