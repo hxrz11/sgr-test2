@@ -1,4 +1,4 @@
-##10. Установка моделей Ollama
+##Установка моделей Ollama
 # Установка моделей
 ollama pull qwen3-32b
 ollama pull gpt-oss-120b  
