@@ -30,7 +30,11 @@ class OllamaClient:
                 response.raise_for_status()
                 
                 result = response.json()
-                return json.loads(result["response"])
+                try:
+                    return json.loads(result["response"])
+                except json.JSONDecodeError as e:
+                    logger.error(f"Некорректный JSON в ответе модели: {result.get('response')}")
+                    raise ValueError("Модель вернула некорректный JSON") from e
                 
         except Exception as e:
             logger.error(f"Ошибка генерации с моделью {model}: {e}")
