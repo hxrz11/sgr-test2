@@ -1,14 +1,15 @@
 # Установка моделей Ollama
 ## Установка моделей
-ollama pull qwen3-32b
-ollama pull gpt-oss-120b  
-ollama pull deepseek-r1-0528
+ollama pull deepseek-r1:32b
+ollama pull qwen3:32b
+ollama pull gpt-oss:20b
+ollama pull fomenks/T-Pro-1.0-it-q4_k_m:latest
 
 ## Проверка установленных моделей
 ollama list
 
 ## Тестирование модели
-ollama run qwen3-32b
+ollama run qwen3:32b
 
 # Запуск POC
 ## 1. Установка зависимостей
@@ -38,7 +39,7 @@ Validation - проверка безопасности и выполнение
 Санитизация входных данных
 
 A/B Тестирование:
-3 модели для сравнения качества
+4 модели для сравнения качества
 Метрики времени выполнения
 Оценка уверенности модели
 

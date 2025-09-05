@@ -8,7 +8,12 @@ logger = logging.getLogger(__name__)
 class OllamaClient:
     def __init__(self, base_url: str = "http://localhost:11434"):
         self.base_url = base_url
-        self.models = ["gpt-oss-120b", "qwen3-32b", "deepseek-r1-0528"]
+        self.models = [
+            "deepseek-r1:32b",
+            "qwen3:32b",
+            "gpt-oss:20b",
+            "fomenks/T-Pro-1.0-it-q4_k_m:latest",
+        ]
     
     async def generate_structured(self, model: str, prompt: str, schema: Dict[str, Any], temperature: float = 0.2) -> Dict[str, Any]:
         """Генерация с структурированным выводом"""
