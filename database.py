@@ -42,7 +42,10 @@ class DatabaseManager:
     
     async def execute_query(self, sql: str) -> List[Dict[str, Any]]:
         """Выполнение SQL запроса с ограничениями безопасности"""
-        
+
+        # Предварительная нормализация запроса
+        sql = self._normalize_query(sql)
+
         # Базовая валидация SQL
         sql_lower = sql.lower().strip()
         
@@ -79,3 +82,28 @@ class DatabaseManager:
         """Закрытие пула соединений"""
         if self.pool:
             await self.pool.close()
+
+    def _normalize_query(self, sql: str) -> str:
+        """Исправляет распространённые ошибки в сгенерированных запросах"""
+
+        def normalize_term(term: str) -> str:
+            """Убирает окончания у русских слов для более широкого поиска"""
+            return re.sub(r'[аяыиоеёюу]+$', '', term, flags=re.IGNORECASE)
+
+        # Нормализация шаблонов ILIKE '%term%'
+        def replace_ilike(match: re.Match) -> str:
+            term = match.group(1)
+            return f"ILIKE '%{normalize_term(term)}%'"
+
+        sql = re.sub(r"ILIKE\s*'%([^']+)%'", replace_ilike, sql, flags=re.IGNORECASE)
+
+        # Приведение числовых полей к numeric при сравнении
+        def replace_numeric(match: re.Match) -> str:
+            field, operator, value = match.groups()
+            return f'CAST("{field}" AS numeric) {operator} {value}'
+
+        numeric_fields = ['Quantity', 'RemainingQuantity', 'ProcessedQuantity']
+        pattern = r'"(' + '|'.join(numeric_fields) + r')"\s*([<>]=?)\s*(\d+(?:\.\d+)?)'
+        sql = re.sub(pattern, replace_numeric, sql, flags=re.IGNORECASE)
+
+        return sql
