@@ -8,6 +8,20 @@ function escape(str) {
         .replace(/"/g, '&quot;');
 }
 
+function formatSQL(sql) {
+    return sql
+        .replace(/\s+/g, ' ')
+        .replace(/SELECT\s/gi, 'SELECT\n  ')
+        .replace(/FROM/gi, '\nFROM')
+        .replace(/WHERE/gi, '\nWHERE')
+        .replace(/GROUP BY/gi, '\nGROUP BY')
+        .replace(/ORDER BY/gi, '\nORDER BY')
+        .replace(/LIMIT/gi, '\nLIMIT')
+        .replace(/JOIN/gi, '\nJOIN')
+        .replace(/,\s*/g, ',\n  ')
+        .trim();
+}
+
 // Инициализация при загрузке страницы
 document.addEventListener('DOMContentLoaded', async function() {
     await checkModelsAvailability();
@@ -95,10 +109,10 @@ function displayResults(result) {
     const confidence = Math.round(result.confidence * 100);
     document.getElementById('confidence-fill').style.width = `${confidence}%`;
     document.getElementById('confidence-text').textContent = `${confidence}%`;
-    
+
     // SQL запрос
-    document.getElementById('sql-query').textContent = result.sql_query;
-    
+    document.getElementById('sql-query').textContent = formatSQL(result.sql_query);
+
     // Статистика данных
     const statsHtml = `
         <p><strong>Найдено записей:</strong> ${result.results.length}</p>
@@ -106,6 +120,8 @@ function displayResults(result) {
         <p><strong>Модель:</strong> ${result.model_used}</p>
     `;
     document.getElementById('data-stats').innerHTML = statsHtml;
+
+    document.getElementById('raw-response').textContent = JSON.stringify(result.results, null, 2);
     
     // Таблица данных
     if (result.results.length > 0) {
