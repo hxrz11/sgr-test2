@@ -98,7 +98,7 @@ async def process_query(request: QueryRequest):
 - Все названия полей в двойных кавычках
 - Для текстового поиска используй ILIKE '%term%'
 - Для номенклатуры ищи по двум полям: ("Nomenclature" ILIKE '%term%' OR "NomenclatureFullName" ILIKE '%term%')
-    - Для поиска пользователей ищи по трём полям: ("UserName" ILIKE '%term%' OR "PurchaseCardUserName" ILIKE '%term%' OR "PurchaseCardFio" ILIKE '%term%')
+    - Для поиска пользователей ищи по трём полям: ("UserName" ILIKE '%term%' OR "PurchaseCardUserName" ILIKE '%term%' OR "PurchaseCardUserFio" ILIKE '%term%')
 - Не добавляй LIMIT если пользователь явно не просил ограничить результаты
 """
 
