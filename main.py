@@ -40,7 +40,7 @@ app.mount("/static", StaticFiles(directory=BASE_DIR / "static"), name="static")
 
 class QueryRequest(BaseModel):
     question: str = Field(..., min_length=1, max_length=500)
-    model: str = "qwen3-32b"
+    model: str = "qwen3:32b"
 
 class QueryResponse(BaseModel):
     sql_query: str
