@@ -98,7 +98,6 @@ async def process_query(request: QueryRequest):
 - Все названия полей в двойных кавычках
 - Для текстового поиска используй ILIKE '%term%'
 - Для номенклатуры ищи по двум полям: ("Nomenclature" ILIKE '%term%' OR "NomenclatureFullName" ILIKE '%term%')
-- Добавь LIMIT 50 если не указано иначе
 """
 
         # Получение схемы для структурированного вывода
