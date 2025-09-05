@@ -18,6 +18,8 @@ function formatSQL(sql) {
         .replace(/ORDER BY/gi, '\nORDER BY')
         .replace(/LIMIT/gi, '\nLIMIT')
         .replace(/JOIN/gi, '\nJOIN')
+        .replace(/AND/gi, '\n  AND')
+        .replace(/OR/gi, '\n  OR')
         .replace(/,\s*/g, ',\n  ')
         .trim();
 }
