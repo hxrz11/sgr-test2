@@ -72,11 +72,11 @@ async def get_available_models():
 async def process_query(request: QueryRequest):
     """Обработка естественного запроса"""
     import time
+
     start_time = time.time()
-    
-    try:
-        # Создание промпта для SGR
-        prompt = f"""
+
+    # Общий шаблон промпта для SGR
+    base_prompt = f"""
 Ты эксперт по SQL и работе с базами данных. Твоя задача - преобразовать естественный запрос на русском языке в корректный SQL запрос.
 
 СХЕМА БАЗЫ ДАННЫХ:
@@ -102,50 +102,75 @@ async def process_query(request: QueryRequest):
 - Не добавляй LIMIT если пользователь явно не просил ограничить результаты
 """
 
-        # Получение схемы для структурированного вывода
-        schema = SQLGeneration.model_json_schema()
+    # Получение схемы для структурированного вывода
+    schema = SQLGeneration.model_json_schema()
 
-        # Логирование промпта и выбранной модели
-        logger.info("Model selected: %s", request.model)
-        logger.info("Prompt: %s", prompt)
+    logger.info("Model selected: %s", request.model)
 
-        # Генерация ответа
-        result = await ollama_client.generate_structured(
-            model=request.model,
-            prompt=prompt,
-            schema=schema,
-            temperature=0.2
-        )
-        
-        # Парсинг результата
-        sgr_result = SQLGeneration(**result)
-        
-        # Выполнение SQL запроса
-        query_results = await db_manager.execute_query(sgr_result.sql_query)
+    error_message = None
+    last_sql = ""
 
-        execution_time = int((time.time() - start_time) * 1000)
-        logger.info(
-            "Generated SQL: %s | Execution time: %d ms",
-            sgr_result.sql_query,
-            execution_time,
-        )
+    try:
+        for attempt in range(2):
+            prompt = base_prompt
+            if error_message:
+                prompt += f"\nПредыдущий SQL вызвал ошибку: {error_message}\nИсправь запрос с учётом этой ошибки."
 
-        return QueryResponse(
-            sql_query=sgr_result.sql_query,
-            explanation=sgr_result.explanation,
-            confidence=sgr_result.confidence_score,
-            results=query_results,
-            execution_time_ms=execution_time,
-            model_used=request.model
-        )
+            logger.info("Prompt: %s", prompt)
 
-    except ValidationError as e:
-        logger.error(f"Ошибка валидации: {e}")
-        raise HTTPException(status_code=422, detail=e.errors())
+            result = await ollama_client.generate_structured(
+                model=request.model,
+                prompt=prompt,
+                schema=schema,
+                temperature=0.2,
+            )
 
+            try:
+                sgr_result = SQLGeneration(**result)
+            except ValidationError as e:
+                logger.error(f"Ошибка валидации: {e}")
+                raise HTTPException(status_code=422, detail=e.errors())
+
+            last_sql = sgr_result.sql_query
+
+            try:
+                query_results = await db_manager.execute_query(sgr_result.sql_query)
+            except ValueError as e:
+                error_message = str(e)
+                logger.warning("SQL execution failed: %s", error_message)
+                continue
+
+            execution_time = int((time.time() - start_time) * 1000)
+            logger.info(
+                "Generated SQL: %s | Execution time: %d ms",
+                sgr_result.sql_query,
+                execution_time,
+            )
+
+            return QueryResponse(
+                sql_query=sgr_result.sql_query,
+                explanation=sgr_result.explanation,
+                confidence=sgr_result.confidence_score,
+                results=query_results,
+                execution_time_ms=execution_time,
+                model_used=request.model,
+            )
+
+    except HTTPException:
+        raise
     except Exception as e:
         logger.error(f"Ошибка обработки запроса: {e}", exc_info=True)
         raise HTTPException(status_code=500, detail=str(e))
+
+    execution_time = int((time.time() - start_time) * 1000)
+    return QueryResponse(
+        sql_query=last_sql,
+        explanation=f"Не удалось выполнить запрос: {error_message}",
+        confidence=0.0,
+        results=[],
+        execution_time_ms=execution_time,
+        model_used=request.model,
+    )
 
 if __name__ == "__main__":
     import uvicorn
