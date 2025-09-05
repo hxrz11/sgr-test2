@@ -1,7 +1,7 @@
 import os
 import time
 import logging
-from typing import List, Dict, Any
+from typing import List, Dict, Any, Tuple
 
 import asyncpg
 import dotenv
@@ -40,8 +40,11 @@ class DatabaseManager:
             logger.error(f"Ошибка подключения к БД: {e}")
             raise
     
-    async def execute_query(self, sql: str) -> List[Dict[str, Any]]:
-        """Выполнение SQL запроса с ограничениями безопасности"""
+    async def execute_query(self, sql: str) -> Tuple[List[Dict[str, Any]], str]:
+        """Выполнение SQL запроса с ограничениями безопасности
+
+        Возвращает результаты выполнения и фактический SQL после нормализации.
+        """
 
         # Предварительная нормализация запроса
         sql = self._normalize_query(sql)
@@ -72,7 +75,7 @@ class DatabaseManager:
                 result = await connection.fetch(sql)
                 duration = time.perf_counter() - start_time
                 logger.info("SQL execution took %.3f seconds", duration)
-                return [dict(row) for row in result]
+                return [dict(row) for row in result], sql
                 
         except Exception as e:
             logger.error(f"Ошибка выполнения SQL: {e}")

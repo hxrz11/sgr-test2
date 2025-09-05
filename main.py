@@ -134,7 +134,9 @@ async def process_query(request: QueryRequest):
             last_sql = sgr_result.sql_query
 
             try:
-                query_results = await db_manager.execute_query(sgr_result.sql_query)
+                query_results, executed_sql = await db_manager.execute_query(
+                    sgr_result.sql_query
+                )
             except ValueError as e:
                 error_message = str(e)
                 logger.warning("SQL execution failed: %s", error_message)
@@ -142,13 +144,13 @@ async def process_query(request: QueryRequest):
 
             execution_time = int((time.time() - start_time) * 1000)
             logger.info(
-                "Generated SQL: %s | Execution time: %d ms",
-                sgr_result.sql_query,
+                "Executed SQL: %s | Execution time: %d ms",
+                executed_sql,
                 execution_time,
             )
 
             return QueryResponse(
-                sql_query=sgr_result.sql_query,
+                sql_query=executed_sql,
                 explanation=sgr_result.explanation,
                 confidence=sgr_result.confidence_score,
                 results=query_results,
