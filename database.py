@@ -5,6 +5,7 @@ from typing import List, Dict, Any
 
 import asyncpg
 import dotenv
+import re
 
 dotenv.load_dotenv()
 
@@ -53,6 +54,10 @@ class DatabaseManager:
         # Обязательное указание таблицы
         if 'purchaseallview' not in sql_lower:
             raise ValueError("Запросы должны использовать таблицу PurchaseAllView")
+
+        # Корректное написание названия таблицы
+        if '"purchaseallview"' not in sql_lower:
+            sql = re.sub(r'(?i)purchaseallview', '"PurchaseAllView"', sql)
         
         # Добавление LIMIT если отсутствует
         if 'limit' not in sql_lower:

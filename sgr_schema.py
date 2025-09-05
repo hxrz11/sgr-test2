@@ -30,7 +30,7 @@ class SQLGeneration(BaseModel):
 
 # Схема базы данных для промптов
 DATABASE_SCHEMA = """
-Таблица: PurchaseAllView (PostgreSQL)
+Таблица: "PurchaseAllView" (PostgreSQL)
 
 Поля:
 - "GlobalUid" (text) - Уникальный идентификатор записи
@@ -60,7 +60,7 @@ DATABASE_SCHEMA = """
 ВАЖНЫЕ ПРАВИЛА:
 1. Используй ILIKE '%term%' для нечеткого поиска
 2. Для поиска по номенклатуре ищи по обоим полям: ("Nomenclature" ILIKE '%term%' OR "NomenclatureFullName" ILIKE '%term%')
-3. Все названия полей в двойных кавычках
+3. Все названия полей и таблицы в двойных кавычках
 4. Даты в формате YYYY-MM-DD
 5. Для поиска пользователей используй "UserName" или "PurchaseCardUserFio"
 """
