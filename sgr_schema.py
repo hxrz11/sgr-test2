@@ -54,20 +54,19 @@ DATABASE_SCHEMA = """
 - "PurchaseCardId" (uuid) - ID карточки закупки
 - "PurchaseNumber" (text) - Номер закупки
 - "PurchaseCardDate" (timestamp) - Дата создания карточки закупки
-- "PurchaseCardUserName" (text) - Пользователь создавший карточку
-- "PurchaseCardUserFio" (text) - ФИО пользователя
+- "PurchaseCardUserName" (text) - ФИО пользователя
 
 ВАЖНЫЕ ПРАВИЛА:
 1. Используй ILIKE '%term%' для нечеткого поиска
 2. Для поиска по номенклатуре ищи по обоим полям: ("Nomenclature" ILIKE '%term%' OR "NomenclatureFullName" ILIKE '%term%')
 3. Все названия полей и таблицы в двойных кавычках
 4. Даты в формате YYYY-MM-DD
-5. Для поиска пользователей используй "UserName" или "PurchaseCardUserFio"
+5. Для поиска пользователей ищи по двум полям: ("UserName" ILIKE '%term%' OR "PurchaseCardUserName" ILIKE '%term%')
 """
 
 EXAMPLE_QUERIES = [
     "Найди закупки по 105 заявке → WHERE \"OrderNumber\" ILIKE '%105%'",
     "Найди номенклатуры с лампами → WHERE (\"Nomenclature\" ILIKE '%лампа%' OR \"NomenclatureFullName\" ILIKE '%лампа%')",
-    "Сколько позиций у Петрова в работе → WHERE \"UserName\" ILIKE '%Petrov%' AND \"RemainingQuantity\" > 0",
+    "Сколько позиций у Петрова в работе → WHERE (\"UserName\" ILIKE '%Petrov%' OR \"PurchaseCardUserName\" ILIKE '%Petrov%') AND \"RemainingQuantity\" > 0",
     "Покажи заявки по объекту Газопровод → WHERE \"ObjectName\" ILIKE '%Газопровод%'"
 ]

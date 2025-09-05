@@ -40,7 +40,7 @@ class DatabaseManager:
             logger.error(f"Ошибка подключения к БД: {e}")
             raise
     
-    async def execute_query(self, sql: str, limit: int = 100) -> List[Dict[str, Any]]:
+    async def execute_query(self, sql: str) -> List[Dict[str, Any]]:
         """Выполнение SQL запроса с ограничениями безопасности"""
         
         # Базовая валидация SQL
@@ -59,9 +59,7 @@ class DatabaseManager:
         if '"purchaseallview"' not in sql_lower:
             sql = re.sub(r'(?i)purchaseallview', '"PurchaseAllView"', sql)
         
-        # Добавление LIMIT если отсутствует
-        if 'limit' not in sql_lower:
-            sql += f" LIMIT {limit}"
+        # Не добавляем LIMIT автоматически, выполняем запрос как есть
 
         logger.info("Executing SQL: %s", sql)
 
