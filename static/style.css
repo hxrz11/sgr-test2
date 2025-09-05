@@ -193,6 +193,22 @@ pre {
     font-family: 'Courier New', monospace;
 }
 
+#sql-query {
+    white-space: pre-wrap;
+    word-break: break-word;
+}
+
+#raw-response {
+    white-space: pre-wrap;
+    word-break: break-word;
+    max-height: 300px;
+    overflow: auto;
+}
+
+.raw-section, .normalized-section {
+    margin-top: 15px;
+}
+
 .data-table {
     overflow-x: auto;
     margin-top: 15px;
