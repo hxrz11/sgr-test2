@@ -27,6 +27,7 @@ function formatSQL(sql) {
 // Инициализация при загрузке страницы
 document.addEventListener('DOMContentLoaded', async function() {
     await checkModelsAvailability();
+    await loadHistory();
 });
 
 // Проверка доступности моделей
@@ -90,8 +91,12 @@ async function submitQuery() {
         }
         
         const result = await response.json();
+        result.question = question;
+        result.timestamp = new Date().toISOString();
+        result.raw_response = result.results;
         currentResults = result;
         displayResults(result);
+        await loadHistory();
         
     } catch (error) {
         alert(`Ошибка: ${error.message}`);
@@ -104,26 +109,27 @@ async function submitQuery() {
 
 // Отображение результатов
 function displayResults(result) {
-    // Объяснение
     document.getElementById('explanation-text').textContent = result.explanation;
-    
-    // Уверенность
+
     const confidence = Math.round(result.confidence * 100);
     document.getElementById('confidence-fill').style.width = `${confidence}%`;
     document.getElementById('confidence-text').textContent = `${confidence}%`;
 
-    // SQL запрос
     document.getElementById('sql-query').textContent = formatSQL(result.sql_query);
 
-    // Статистика данных
+    const dt = result.timestamp ? new Date(result.timestamp) : new Date();
     const statsHtml = `
+        <p><strong>Дата:</strong> ${dt.toLocaleDateString()}</p>
+        <p><strong>Время:</strong> ${dt.toLocaleTimeString()}</p>
+        <p><strong>Запрос пользователя:</strong> ${escape(result.question || '')}</p>
         <p><strong>Найдено записей:</strong> ${result.results.length}</p>
         <p><strong>Время выполнения:</strong> ${result.execution_time_ms} мс</p>
         <p><strong>Модель:</strong> ${result.model_used}</p>
     `;
     document.getElementById('data-stats').innerHTML = statsHtml;
 
-    document.getElementById('raw-response').textContent = JSON.stringify(result.results, null, 2);
+    const raw = result.raw_response || result.results;
+    document.getElementById('raw-response').textContent = JSON.stringify(raw, null, 2);
     
     // Таблица данных
     if (result.results.length > 0) {
@@ -208,9 +214,24 @@ function copySql() {
     });
 }
 
-// Установка примера
-function setExample(example) {
-    document.getElementById('question').value = example;
+async function loadHistory() {
+    try {
+        const response = await fetch('/api/history');
+        const data = await response.json();
+        const list = document.getElementById('history-list');
+        list.innerHTML = '';
+        data.logs.forEach(log => {
+            const btn = document.createElement('button');
+            btn.textContent = log.question;
+            btn.onclick = () => {
+                currentResults = log;
+                displayResults(log);
+            };
+            list.appendChild(btn);
+        });
+    } catch (error) {
+        console.error('Ошибка загрузки истории:', error);
+    }
 }
 
 // Обработка Enter в textarea
