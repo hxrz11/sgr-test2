@@ -7,6 +7,8 @@ import os
 import logging
 from typing import List, Dict, Any
 from pathlib import Path
+from datetime import datetime
+import json
 
 from sgr_schema import SQLGeneration, DATABASE_SCHEMA, EXAMPLE_QUERIES
 from database import DatabaseManager  
@@ -20,6 +22,8 @@ logger = logging.getLogger(__name__)
 db_manager = DatabaseManager()
 ollama_client = OllamaClient(os.getenv("OLLAMA_BASE_URL", "http://localhost:11434"))
 BASE_DIR = Path(__file__).resolve().parent
+LOGS_DIR = BASE_DIR / "logs"
+LOGS_DIR.mkdir(exist_ok=True)
 
 
 @asynccontextmanager
@@ -67,6 +71,20 @@ async def get_available_models():
         is_available = await ollama_client.check_model_availability(model)
         available.append({"name": model, "available": is_available})
     return {"models": available}
+
+
+@app.get("/api/history")
+async def get_history():
+    """Возврат последних 5 запросов"""
+    files = sorted(LOGS_DIR.glob("*.json"), reverse=True)[:5]
+    history = []
+    for file in files:
+        try:
+            with open(file, "r", encoding="utf-8") as f:
+                history.append(json.load(f))
+        except Exception as e:
+            logger.warning("Не удалось прочитать лог %s: %s", file, e)
+    return {"logs": history}
 
 @app.post("/api/query", response_model=QueryResponse)
 async def process_query(request: QueryRequest):
@@ -148,8 +166,7 @@ async def process_query(request: QueryRequest):
                 executed_sql,
                 execution_time,
             )
-
-            return QueryResponse(
+            response = QueryResponse(
                 sql_query=executed_sql,
                 explanation=sgr_result.explanation,
                 confidence=sgr_result.confidence_score,
@@ -157,6 +174,26 @@ async def process_query(request: QueryRequest):
                 execution_time_ms=execution_time,
                 model_used=request.model,
             )
+
+            log_entry = {
+                "timestamp": datetime.now().isoformat(),
+                "question": request.question,
+                "sql_query": executed_sql,
+                "raw_response": query_results,
+                "results": query_results,
+                "explanation": sgr_result.explanation,
+                "confidence": sgr_result.confidence_score,
+                "execution_time_ms": execution_time,
+                "model_used": request.model,
+            }
+            log_file = LOGS_DIR / f"{datetime.now().strftime('%Y%m%d_%H%M%S_%f')}.json"
+            try:
+                with open(log_file, "w", encoding="utf-8") as f:
+                    json.dump(log_entry, f, ensure_ascii=False, indent=2)
+            except Exception as e:
+                logger.warning("Не удалось сохранить лог: %s", e)
+
+            return response
 
     except HTTPException:
         raise
